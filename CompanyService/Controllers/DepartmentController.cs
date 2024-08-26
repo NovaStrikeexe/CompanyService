@@ -5,62 +5,54 @@ using Swashbuckle.AspNetCore.Annotations;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DepartmentController(IDepartmentService departmentService) : ControllerBase
+public class DepartmentController : ControllerBase
 {
-    /// <summary>
-    /// Получить список всех отделов.
-    /// </summary>
-    /// <param name="cancellationToken">Токен для отмены операции.</param>
-    /// <returns>Список всех отделов.</returns>
+    private readonly IDepartmentService _departmentService;
+    private readonly ILogger<DepartmentController> _logger;
+
+    public DepartmentController(IDepartmentService departmentService, ILogger<DepartmentController> logger)
+    {
+        _departmentService = departmentService;
+        _logger = logger;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllDepartments(CancellationToken cancellationToken)
     {
-        var departments = await departmentService.GetAllDepartmentsAsync(cancellationToken);
+        _logger.LogInformation("Запрос на получение списка всех отделов.");
+        var departments = await _departmentService.GetAllDepartmentsAsync(cancellationToken);
+        _logger.LogInformation($"Получено {departments.Count()} отделов.");
         return Ok(departments);
     }
 
-    /// <summary>
-    /// Получить отдел по идентификатору.
-    /// </summary>
-    /// <param name="id">Идентификатор отдела.</param>
-    /// <param name="cancellationToken">Токен для отмены операции.</param>
-    /// <returns>Информация о запрашиваемом отделе.</returns>
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Получить отдел по идентификатору", Description = "Возвращает информацию о конкретном отделе по его идентификатору.")]
     [SwaggerResponse(200, "Успешно получена информация об отделе.", typeof(Department))]
     [SwaggerResponse(404, "Отдел с данным идентификатором не найден.")]
     public async Task<IActionResult> GetDepartment(int id, CancellationToken cancellationToken)
     {
-        var department = await departmentService.GetDepartmentByIdAsync(id, cancellationToken);
+        _logger.LogInformation($"Запрос на получение отдела с идентификатором {id}.");
+        var department = await _departmentService.GetDepartmentByIdAsync(id, cancellationToken);
         if (department == null)
         {
+            _logger.LogWarning($"Отдел с идентификатором {id} не найден.");
             return NotFound();
         }
+        _logger.LogInformation($"Отдел с идентификатором {id} успешно получен.");
         return Ok(department);
     }
 
-    /// <summary>
-    /// Добавить новый отдел.
-    /// </summary>
-    /// <param name="department">Информация о новом отделе.</param>
-    /// <param name="cancellationToken">Токен для отмены операции.</param>
-    /// <returns>Созданный отдел.</returns>
     [HttpPost]
     [SwaggerOperation(Summary = "Добавить новый отдел", Description = "Добавляет новый отдел в систему.")]
     [SwaggerResponse(201, "Отдел успешно создан.", typeof(Department))]
     public async Task<IActionResult> AddDepartment([FromBody] Department department, CancellationToken cancellationToken)
     {
-        await departmentService.AddDepartmentAsync(department, cancellationToken);
+        _logger.LogInformation("Запрос на добавление нового отдела.");
+        await _departmentService.AddDepartmentAsync(department, cancellationToken);
+        _logger.LogInformation($"Отдел с идентификатором {department.Id} успешно создан.");
         return CreatedAtAction(nameof(GetDepartment), new { id = department.Id }, department);
     }
 
-    /// <summary>
-    /// Обновить существующий отдел.
-    /// </summary>
-    /// <param name="id">Идентификатор отдела.</param>
-    /// <param name="department">Информация об отделе для обновления.</param>
-    /// <param name="cancellationToken">Токен для отмены операции.</param>
-    /// <returns>Результат выполнения операции.</returns>
     [HttpPut("{id}")]
     [SwaggerOperation(Summary = "Обновить существующий отдел", Description = "Обновляет информацию о существующем отделе.")]
     [SwaggerResponse(204, "Информация об отделе успешно обновлена.")]
@@ -69,25 +61,24 @@ public class DepartmentController(IDepartmentService departmentService) : Contro
     {
         if (id != department.Id)
         {
+            _logger.LogWarning($"Неправильный запрос: идентификатор {id} не совпадает с идентификатором в теле запроса {department.Id}.");
             return BadRequest();
         }
 
-        await departmentService.UpdateDepartmentAsync(department, cancellationToken);
+        _logger.LogInformation($"Запрос на обновление отдела с идентификатором {id}.");
+        await _departmentService.UpdateDepartmentAsync(department, cancellationToken);
+        _logger.LogInformation($"Отдел с идентификатором {id} успешно обновлен.");
         return NoContent();
     }
 
-    /// <summary>
-    /// Удалить отдел.
-    /// </summary>
-    /// <param name="id">Идентификатор отдела.</param>
-    /// <param name="cancellationToken">Токен для отмены операции.</param>
-    /// <returns>Результат выполнения операции.</returns>
     [HttpDelete("{id}")]
     [SwaggerOperation(Summary = "Удалить отдел", Description = "Удаляет отдел по идентификатору.")]
     [SwaggerResponse(204, "Отдел успешно удален.")]
     public async Task<IActionResult> DeleteDepartment(int id, CancellationToken cancellationToken)
     {
-        await departmentService.DeleteDepartmentAsync(id, cancellationToken);
+        _logger.LogInformation($"Запрос на удаление отдела с идентификатором {id}.");
+        await _departmentService.DeleteDepartmentAsync(id, cancellationToken);
+        _logger.LogInformation($"Отдел с идентификатором {id} успешно удален.");
         return NoContent();
     }
 }
