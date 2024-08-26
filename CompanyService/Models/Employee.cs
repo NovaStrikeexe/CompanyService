@@ -8,7 +8,5 @@ public class Employee
     public string MiddleName { get; set; }
     public DateTime DateOfBirth { get; set; }
     public int DepartmentId { get; set; }
-    public Department Department { get; set; }
     public int CompanyId { get; set; }
-    public Company Company { get; set; }
 }

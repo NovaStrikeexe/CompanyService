@@ -11,8 +11,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Company>().ToTable("Companies");
-        modelBuilder.Entity<Department>().ToTable("Departments");
-        modelBuilder.Entity<Employee>().ToTable("Employees");
+        modelBuilder.Entity<Company>().ToTable("companies");
+        modelBuilder.Entity<Department>().ToTable("departments");
+        modelBuilder.Entity<Employee>().ToTable("employees");
     }
 }
