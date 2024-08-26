@@ -1,0 +1,74 @@
+﻿services:
+  postgres:
+    image: postgres:15.4
+    container_name: postgres
+    command: >
+      postgres 
+      -c shared_buffers=4GB 
+      -c max_connections=5000 
+      -c listen_addresses='*' 
+      -c effective_cache_size=12GB 
+      -c maintenance_work_mem=1GB 
+      -c checkpoint_completion_target=0.9 
+      -c wal_buffers=16MB 
+      -c default_statistics_target=100 
+      -c random_page_cost=1.1 
+      -c effective_io_concurrency=300 
+      -c work_mem=209kB 
+      -c huge_pages=off 
+      -c min_wal_size=1GB 
+      -c max_wal_size=4GB 
+      -c max_worker_processes=8 
+      -c max_parallel_workers_per_gather=4 
+      -c max_parallel_workers=8 
+      -c max_parallel_maintenance_workers=4 
+      -c logging_collector=on 
+      -c log_directory='/var/lib/postgresql/data/log' 
+      -c log_filename='postgresql-%Y-%m-%d_%H%M%S.log' 
+      -c log_statement='none' 
+      -c log_timezone='UTC' 
+      -c log_rotation_age=1d 
+      -c log_rotation_size=100MB 
+      -c autovacuum=on 
+      -c autovacuum_vacuum_scale_factor=0.05 
+      -c autovacuum_analyze_scale_factor=0.02 
+      -c autovacuum_vacuum_cost_limit=2000 
+      -c timezone='UTC' 
+      -c shared_preload_libraries=pg_stat_statements 
+      -c log_min_messages='fatal' 
+      -c log_min_error_statement='fatal' 
+      -c track_io_timing=off
+    ports:
+      - "5432:5432"
+    restart: on-failure
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  my_service:
+    build:
+      context: ../CompanyService
+    container_name: companyservice_api
+    ports:
+      - 8080:8080
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+    depends_on:
+      - postgres
+    restart: on-failure
+
+volumes:
+  postgres_data:
