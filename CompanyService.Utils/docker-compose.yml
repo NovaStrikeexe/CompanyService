@@ -1,4 +1,6 @@
-﻿services:
+﻿version: '3.8'
+
+services:
   postgres:
     image: postgres:15.4
     container_name: postgres
@@ -56,6 +58,7 @@
   my_service:
     build:
       context: ../CompanyService
+      dockerfile: Dockerfile
     container_name: companyservice_api
     ports:
       - 8080:8080
@@ -68,6 +71,3 @@
     depends_on:
       - postgres
     restart: on-failure
-
-volumes:
-  postgres_data:
